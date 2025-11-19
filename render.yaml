@@ -1,19 +1,18 @@
-# Deploy n8n on Render with Postgres (official template)
+# n8n on Render with Postgres (updated 2025 syntax – pulls prebuilt image)
 services:
-  # n8n Web Service (Docker image pull—no local build needed)
+  # n8n Web Service (pulls official image – no build/Dockerfile)
   - type: web
     name: n8n
-    env: docker
-    # Pulls official n8n image remotely—Render handles everything
-    image: docker.n8n.io/n8nio/n8n:latest  # Pin to version if needed, e.g., :1.58.0
-    region: oregon  # Or your preferred region
+    runtime: image  # Key fix: 'image' for prebuilt Docker pulls (not 'docker' or 'env: docker')
+    image: docker.n8n.io/n8nio/n8n:latest  # Official n8n image – Render pulls it
+    region: oregon  # Or your preferred region (e.g., frankfurt)
     plan: free  # Upgrade to starter for always-on
 
     envVars:
-      # Core n8n settings
+      # Core n8n settings (auto-URL for webhooks)
       - key: N8N_HOST
-        value: https://${n8n.URL}  # Auto-fills with your Render URL for webhooks
-        sync: false  # Set manually post-deploy if needed
+        value: https://${n8n.URL}
+        sync: false  # Edit manually post-deploy if needed
       - key: N8N_PORT
         value: 5678
       - key: N8N_PROTOCOL
@@ -43,24 +42,24 @@ services:
           name: n8n-db
           property: password
 
-      # Security (prevents credential loss on restarts)
+      # Security (fixed encryption prevents data loss)
       - key: N8N_ENCRYPTION_KEY
-        generateValue: true  # Render auto-generates a fixed 32-char key
+        generateValue: true  # Auto-generates persistent key
       - key: N8N_BASIC_AUTH_ACTIVE
         value: "true"
       - key: N8N_BASIC_AUTH_USER
-        value: admin  # Change to your preferred username
+        value: admin  # Customize
       - key: N8N_BASIC_AUTH_PASSWORD
-        generateValue: true  # Auto-generates strong password (view in dashboard later)
+        generateValue: true  # Auto-strong password (copy from dashboard)
 
-      # Webhooks & Production
+      # Production & Webhooks
       - key: WEBHOOK_URL
         value: https://${n8n.URL}
       - key: NODE_ENV
         value: production
 
-# PostgreSQL Database (free tier: 90-day trial, 1GB)
+# Postgres DB (free 90-day trial)
 databases:
   - name: n8n-db
-    plan: free  # Upgrade to starter (~$7/mo) for persistence beyond 90 days
-    region: oregon
+    plan: free
+    region: oregon  # Match service region
