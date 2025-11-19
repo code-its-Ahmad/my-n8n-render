@@ -42,5 +42,5 @@ services:
 databases:
   - name: n8n-db
     databaseName: n8n
-    user: n8n-user
+    # user omitted: Render auto-generates valid username (e.g., rnd_pqusr_abc123)
     plan: starter
