@@ -2,15 +2,18 @@ services:
   - type: web
     name: n8n
     env: docker
-    region: oregon
-    plan: free                             # change to starter or pro if you want always-on
+    region: oregon  # Change to your preferred region if needed
+    plan: free
 
-    dockerContext: .
-    dockerfilePath: Dockerfile            # Render now requires this line
+    # Pull official n8n image directly (no build, no Dockerfile needed)
+    image: docker.n8n.io/n8nio/n8n:latest  # Use :1.XX.X for pinned version
+
+    # No dockerfilePath or dockerContext—avoids the "unmarshal !!str docker into file.image" error
 
     envVars:
       - key: N8N_HOST
-        sync: false                       # we set it manually after deploy
+        value: https://n8n.onrender.com  # Replace with your actual service URL after deploy
+        sync: false  # Manual update post-deploy
       - key: N8N_PORT
         value: 5678
       - key: N8N_PROTOCOL
@@ -38,17 +41,23 @@ services:
           name: n8n-db
           property: password
       - key: N8N_ENCRYPTION_KEY
-        generateValue: true               # auto-generates a fixed key (recommended)
+        generateValue:
+          type: plain  # Auto-generates a secure 32-char key
       - key: N8N_BASIC_AUTH_ACTIVE
-        value: "true"
+        value: true
       - key: N8N_BASIC_AUTH_USER
-        value: admin                      # change this
+        value: admin  # Change to your preferred username
       - key: N8N_BASIC_AUTH_PASSWORD
-        generateValue: true               # gives you a strong random password
+        generateValue:
+          type: plain  # Auto-generates strong password (view in dashboard post-deploy)
       - key: WEBHOOK_URL
-        value: https://${{n8n.URL}}       # auto webhook URL
+        value: ${N8N_HOST}  # References the host var
+      - key: NODE_ENV
+        value: production
 
 databases:
   - name: n8n-db
+    databaseName: n8n_db
+    user: n8n_user
     plan: free
     region: oregon
