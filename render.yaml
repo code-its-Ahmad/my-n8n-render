@@ -1,11 +1,11 @@
 services:
   - type: web
-    name: n8n  # Your service name/URL prefix
+    name: n8n
     env: docker
-    dockerCommand: docker.n8n.io/n8nio/n8n:1.65.0  # Official image + version pin
-    envVars:  # List of maps - REQUIRED format for no unmarshal errors
+    dockerCommand: docker.n8n.io/n8nio/n8n:1.65.0
+    envVars:
       - key: N8N_ENCRYPTION_KEY
-        generateValue: true  # Auto-generates 32+ char secret
+        generateValue: true
       - key: DB_TYPE
         value: postgresdb
       - key: DB_POSTGRESDB_DATABASE
@@ -29,25 +29,18 @@ services:
       - key: N8N_BASIC_AUTH_ACTIVE
         value: "true"
       - key: N8N_BASIC_AUTH_USER
-        value: "admin"  # Customize
+        value: "admin"
       - key: N8N_BASIC_AUTH_PASSWORD
-        generateValue: true  # Or set manually in Render UI
+        generateValue: true
       - key: PORT
         value: "5678"
       - key: N8N_DIAGNOSTICS_ENABLED
-        value: "false"  # Optional: Disable telemetry
+        value: "false"
       - key: WEBHOOK_URL
-        value: "https://n8n.onrender.com/"  # Update post-deploy
-    disk:
-      name: n8n-data
-      mountPath: /home/node/.n8n  # For extra persistence (optional with Postgres)
-      sizeGB: 1
-    healthCheckPath: /healthz
-    healthCheckType: http
-    plan: free  # Or 'starter' for always-on
+        value: "https://n8n.onrender.com/"
 
 databases:
   - name: n8n-db
     databaseName: n8n
     user: n8n-user
-    plan: starter  # Permanent; free trial then $7/mo
+    plan: starter
