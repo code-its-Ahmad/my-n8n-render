@@ -1,14 +1,16 @@
 services:
-  # Web Service for n8n
   - type: web
     name: n8n
     env: docker
-    image: docker.n8n.io/n8nio/n8n:latest
+    region: oregon
+    plan: free                             # change to starter or pro if you want always-on
+
+    dockerContext: .
+    dockerfilePath: Dockerfile            # Render now requires this line
+
     envVars:
       - key: N8N_HOST
-        fromDatabase:
-          name: n8n-db
-          property: host
+        sync: false                       # we set it manually after deploy
       - key: N8N_PORT
         value: 5678
       - key: N8N_PROTOCOL
@@ -35,11 +37,18 @@ services:
         fromDatabase:
           name: n8n-db
           property: password
-    plan: free
+      - key: N8N_ENCRYPTION_KEY
+        generateValue: true               # auto-generates a fixed key (recommended)
+      - key: N8N_BASIC_AUTH_ACTIVE
+        value: "true"
+      - key: N8N_BASIC_AUTH_USER
+        value: admin                      # change this
+      - key: N8N_BASIC_AUTH_PASSWORD
+        generateValue: true               # gives you a strong random password
+      - key: WEBHOOK_URL
+        value: https://${{n8n.URL}}       # auto webhook URL
 
-# PostgreSQL Database
 databases:
   - name: n8n-db
-    databaseName: n8n_db
-    user: n8n_user
     plan: free
+    region: oregon
