@@ -1,23 +1,25 @@
+# Deploy n8n on Render with Postgres (official template)
 services:
+  # n8n Web Service (Docker image pull—no local build needed)
   - type: web
     name: n8n
     env: docker
-    region: oregon  # Change to your preferred region if needed
-    plan: free
-
-    # Pull official n8n image directly (no build, no Dockerfile needed)
-    image: docker.n8n.io/n8nio/n8n:latest  # Use :1.XX.X for pinned version
-
-    # No dockerfilePath or dockerContext—avoids the "unmarshal !!str docker into file.image" error
+    # Pulls official n8n image remotely—Render handles everything
+    image: docker.n8n.io/n8nio/n8n:latest  # Pin to version if needed, e.g., :1.58.0
+    region: oregon  # Or your preferred region
+    plan: free  # Upgrade to starter for always-on
 
     envVars:
+      # Core n8n settings
       - key: N8N_HOST
-        value: https://n8n.onrender.com  # Replace with your actual service URL after deploy
-        sync: false  # Manual update post-deploy
+        value: https://${n8n.URL}  # Auto-fills with your Render URL for webhooks
+        sync: false  # Set manually post-deploy if needed
       - key: N8N_PORT
         value: 5678
       - key: N8N_PROTOCOL
         value: https
+
+      # Database (auto-links to n8n-db below)
       - key: DB_TYPE
         value: postgresdb
       - key: DB_POSTGRESDB_HOST
@@ -40,24 +42,25 @@ services:
         fromDatabase:
           name: n8n-db
           property: password
+
+      # Security (prevents credential loss on restarts)
       - key: N8N_ENCRYPTION_KEY
-        generateValue:
-          type: plain  # Auto-generates a secure 32-char key
+        generateValue: true  # Render auto-generates a fixed 32-char key
       - key: N8N_BASIC_AUTH_ACTIVE
-        value: true
+        value: "true"
       - key: N8N_BASIC_AUTH_USER
         value: admin  # Change to your preferred username
       - key: N8N_BASIC_AUTH_PASSWORD
-        generateValue:
-          type: plain  # Auto-generates strong password (view in dashboard post-deploy)
+        generateValue: true  # Auto-generates strong password (view in dashboard later)
+
+      # Webhooks & Production
       - key: WEBHOOK_URL
-        value: ${N8N_HOST}  # References the host var
+        value: https://${n8n.URL}
       - key: NODE_ENV
         value: production
 
+# PostgreSQL Database (free tier: 90-day trial, 1GB)
 databases:
   - name: n8n-db
-    databaseName: n8n_db
-    user: n8n_user
-    plan: free
+    plan: free  # Upgrade to starter (~$7/mo) for persistence beyond 90 days
     region: oregon
